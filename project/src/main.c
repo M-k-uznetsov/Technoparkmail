@@ -1,70 +1,46 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "boundary.h"
-#include "parc.h"
-#include "memory.h"
+#include "utils.h"
+#include "menu.h"
 
-int main(int argc, const char** argv) {
-    if (argc != 2) {
-        fprintf(stderr, "no argv");
-        return EXIT_FAILURE;
-    }
-    FILE* email = fopen(argv[1], "r");
-    if (email == NULL) {
-        fprintf(stderr, "error open source file ");
-        return EXIT_FAILURE;
-    }
-    data_t data;
-    create_data_t(&data);
-
-    int is_shift_str = TRUE;
-    int is_last_part = FALSE;
-    char current_sumbol;
-
-    while (fscanf(email, "%c", &current_sumbol) != EOF) {
-        if (is_shift_str == TRUE) {
-            if (check_last_part(&is_last_part, current_sumbol) == EXIT_FAILURE) {
-                fprintf(stderr, "error check_last_part");
-                free_data_t(&data);
-                fclose(email);
-                return EXIT_FAILURE;
+int main() {
+    main_menu();
+    int choice = 0;
+    while (scanf("%d", &choice) != EOF) {
+        switch (choice) {
+            case MASTER_WRITE: {
+                if (record_write() == EXIT_FAILURE) {
+                    fprintf(stderr, "error record_write");
+                    return EXIT_FAILURE;
+                }
+                break;
             }
-            if (parcer_header(email, &data, &current_sumbol) == EXIT_FAILURE) {
-                fprintf(stderr, "error check_error_parcer_header");
-                free_data_t(&data);
-                fclose(email);
-                return EXIT_FAILURE;
+
+            case TRANSACTION_WRITE: {
+                if (transaction_write() == EXIT_FAILURE) {
+                    fprintf(stderr, "error transaction_write");
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+
+            case BLACK_RECORD: {
+                if (black_record() == EXIT_FAILURE) {
+                    fprintf(stderr, "error black_record");
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+
+            default: {
+                fprintf(stderr, "error menu select");
+                break;
             }
         }
-
-        is_shift_str = check_shift_str(current_sumbol);
-
-        if (parcer_body(email, &current_sumbol, data.boundary,
-            &data.cnt_boundary, &is_last_part) == EXIT_FAILURE) {
-            fprintf(stderr, "error check_error_parcer_body");
-            free_data_t(&data);
-            fclose(email);
-            return EXIT_FAILURE;
-        }
+        clean_buffer();
+        main_menu();
     }
 
-    if (check_count_part(data.boundary, &data.cnt_boundary, is_last_part) == EXIT_FAILURE) {
-        fprintf(stderr, "error check_boundary");
-        free_data_t(&data);
-        fclose(email);
-        return EXIT_FAILURE;
-    }
-
-    if (print_data(&data) == EXIT_FAILURE) {
-        fprintf(stderr, "error print_data");
-        free_data_t(&data);
-        fclose(email);
-        return EXIT_FAILURE;
-    }
-
-    free_data_t(&data);
-    fclose(email);
     return EXIT_SUCCESS;
 }
