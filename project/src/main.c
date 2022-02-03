@@ -1,52 +1,28 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stddef.h>
+#include "matrix.h"
+
+#define FILENAME "matrix.dat"
 
 
-#include "utils.h"
-#include "prime.h"
+int main(void) {
+    Matrix* matrix = create_matrix_from_file(FILENAME);
 
-#define ERR_ARGS_COUNT (-1)
-#define ERR_WRONG_FLG (-2)
+    size_t result_rows = 0;
+    size_t result_cols = 0;
+    double result_value = 0;
 
-#define TST_FOO_FIX     1
-#define TST_FOO_IMPL    2
-#define TST_MOD_IMPL    3
-
-
-
-int main(int argc, const char** argv) {
-    if (argc < 3) {
-        return ERR_ARGS_COUNT;
-    }
-    int test_case = atoi(argv[1]);
-    const char* data;
-    data = argv[2];
-    switch (test_case) {
-        case TST_FOO_FIX: {
-            size_t res = custom_strlen(data);
-            printf("%zu\n", res);
-            break;
-        }
-        case TST_FOO_IMPL: {
-            if (argc != 4) {
-                return ERR_ARGS_COUNT;
-            }
-            int base = atoi(data);
-            int pow =  atoi(argv[3]);
-            int res = custom_pow(base, pow);
-            printf("%d\n", res);
-            break;
-        }
-        case TST_MOD_IMPL: {
-            int num = atoi(data);
-            int result = is_prime(num);
-	    printf("%d\n", result);
-            break;
-        }
-        default: {
-            return ERR_WRONG_FLG;
-        }
-    }
+    get_rows(matrix, &result_rows);
+    get_cols(matrix, &result_cols);
+    get_elem(matrix, 1, 2, &result_value);
+    mul_scalar(matrix, 3);
+    transp(matrix);
+    sum(matrix, transp(matrix));
+    sub(matrix, transp(matrix));
+    mul(matrix, transp(matrix));
+    double determinant = 0;
+    det(matrix, &determinant);
+    adj(matrix);
+    inv(matrix);
+    set_elem(matrix, 2, 0, 16);
+    free_matrix(matrix);
     return 0;
 }
