@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "transactionwrite.h": "c",
+        "iomanip": "cpp",
+        "iosfwd": "cpp"
+    },
+    "editor.detectIndentation": false
+}

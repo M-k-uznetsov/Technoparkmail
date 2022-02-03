@@ -1,19 +1,34 @@
-#ifndef PROJECT_TESTS_INCLUDE_UTILS_H_
-#define PROJECT_TESTS_INCLUDE_UTILS_H_
-
-#include <string.h>
+#pragma once
 
 #include "matrix.h"
-// FIXME(t.razumov): base accuracy
-#define eps_base 1e-6
+#include "exceptions.h"
 
-char *path_join(const char *, ...);
+#include <gtest/gtest.h>
 
-Matrix *create_identity_matrix(int);
-void print_matrix(const Matrix *);
-void assert_matrix_equal(Matrix *, Matrix *, double);
-
-int double_equals(double, double, double);
+#include <filesystem>
+#include <fstream>
 
 
-#endif  // PROJECT_TESTS_INCLUDE_UTILS_H_
+namespace fs = std::filesystem;
+
+extern fs::path glob_test_dir;
+
+using MatrixData = std::vector<std::vector<double>>;
+using MatrixRow = std::vector<double>;
+
+MatrixData createMatrixData(std::istream& is);
+std::ostream& operator<<(std::ostream& os, const MatrixData& matrix_data);
+
+const size_t MAX_SIZE = 10;
+const double MIN_VAL = -100.0;
+const double MAX_VAL = 100.0;
+
+double genV(double from = MIN_VAL, double to = MAX_VAL);
+size_t genI(size_t from = 0, size_t to = MAX_SIZE);
+prep::Matrix genM(size_t rows = 0, size_t cols = 0);
+prep::Matrix genNonsquare();
+
+namespace prep {
+  bool operator==(const prep::Matrix& matrix, const MatrixData& matrix_data);
+  bool operator==(const MatrixData& matrix_data, const prep::Matrix& matrix);
+}

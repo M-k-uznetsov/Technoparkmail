@@ -1,36 +1,48 @@
-#ifndef PROJECT_INCLUDE_MATRIX_H_
-#define PROJECT_INCLUDE_MATRIX_H_
+#pragma once
 
-#include <stddef.h>
+#include <vector>
+#include <istream>
 
-typedef struct Matrix {
+namespace prep {
+class Matrix {
+ private:
     size_t row;
     size_t col;
-    double** data;
-} Matrix;
+    std::vector<std::vector<double>> matrix;
 
-//  Init/release operations
-Matrix* create_matrix_from_file(const char* path_file);
-Matrix* create_matrix(size_t rows, size_t cols);
-int free_matrix(Matrix* matrix);
+ public:
+  explicit Matrix(size_t rows = 0, size_t cols = 0);
+  explicit Matrix(std::istream& is);
+  Matrix(const Matrix& rhs) = default;
+  Matrix& operator=(const Matrix& rhs) = default;
+  ~Matrix() = default;
 
-//  Basic operations
-int get_rows(const Matrix* matrix, size_t* rows);
-int get_cols(const Matrix* matrix, size_t* cols);
-int get_elem(const Matrix* matrix, size_t row, size_t col, double* val);
-int set_elem(Matrix* matrix, size_t row, size_t col, double val);
+  size_t getRows() const;
+  size_t getCols() const;
+  double operator()(size_t i, size_t j) const;
+  double& operator()(size_t i, size_t j);
 
-//  Math operations
-Matrix* mul_scalar(const Matrix* matrix, double val);
-Matrix* transp(const Matrix* matrix);
+  bool operator==(const Matrix& rhs) const;
+  bool operator!=(const Matrix& rhs) const;
 
-Matrix* sum(const Matrix* l, const Matrix* r);
-Matrix* sub(const Matrix* l, const Matrix* r);
-Matrix* mul(const Matrix* l, const Matrix* r);
+  Matrix operator+(const Matrix& rhs) const;
+  Matrix operator-(const Matrix& rhs) const;
+  Matrix operator*(const Matrix& rhs) const;
 
-//  Extra operations
-int det(const Matrix* matrix, double* val);
-Matrix* adj(const Matrix* matrix);
-Matrix* inv(const Matrix* matrix);
+  Matrix operator*(double val) const;
 
-#endif  //  PROJECT_INCLUDE_MATRIX_H_
+  friend
+  Matrix operator*(double val, const Matrix& matrix);
+  friend
+  std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
+
+  Matrix transp() const;
+  double det() const;
+  Matrix adj() const;
+  Matrix inv() const;
+  Matrix minor(size_t r, size_t c) const;
+};
+
+Matrix operator*(double val, const Matrix& matrix);
+std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
+}  // namespace prep

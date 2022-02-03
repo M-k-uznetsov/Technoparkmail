@@ -1,66 +1,103 @@
 # Подготовительная программа на С/С++
 
-## Домашнее задание №3
-Реализация библиотеки для работы с матрицами.
+## Домашнее задание №5
 
-В файле **_project/include/matrix.h_** представлен интерфейс реализуемой библиотеки.
+Необходимо портировать библиотеку для работы с матрицами с C на C++.
+Требования и условия аналогичны ДЗ №3.
 
-Требуется:
-1. Выбрать один из вариантов представления матриц в памяти.
-2. Реализовать интерфейс создания и уничтожения объектов представления матриц.
-3. Реализовать базовые функции для работы с матрицой.
-4. Реализовать базовые математические операции над матрицами.
-5. \*Реализовать дополнительные математические операции над матрицами.
+Выполнение задания подразумевает использование стандарта C++17. Чтобы
+ использовать возможности 17 стандарта нужен gcc версии не ниже, чем 7.
+Проверить можно так `gcc -v`.
 
-\* Дополнительное задание. За каждую реализованную функцию - **+1** балл.
+Как накатить новый gcc в Ubuntu написано
+ [тут](https://gist.github.com/jlblancoc/99521194aba975286c80f93e47966dc5)
+
+Использовать простые типы данных не стоит. Вместо `сonst char*` осваиваем
+ `std::string`, вместо `int*` - `std::vector<int>` и т.д.
+Это готовые обертки для этих типов данных, смысл существования которых
+ идентичен идее этого домашнего задания.
+
+Для сборки используется `cmake`. Установка последней версии
+ описана [тут](https://cmake.org/install/)
+
+Для тестирования используется gtest.
+Установка - `sudo apt-get install --yes libgtest-dev`
 
 ## Описание интерфейса
 
-### Интерфейс создания и уничтожения
+* **_project/include/matrix.h_** - интерфейс.
+* **_project/include/exception.h_** - исключения, используемые в библиотеке.
 
-* `struct Matrix` - основная структура библиотеки.
-* `Matrix* create_matrix_from_file(const char* path_file)` - создание матрицы из файла. Принимает путь к файлу с матрицей.
-Формат представления матрицы в файле:
-```
-<количество строк> <количество столбцов>
-<перечисление всех элементов матрицы>
-```
-Пример:
-```
-2 3
-1.1  2.3 4.5
--0.7 3.8 150.071
-```
+Библиотека находится в пространстве имен `prep`.
 
-* `Matrix* create_matrix(int rows, int cols)` - создать пустую матрицу размера `<rows>*<cols>`.
-* `int free_matrix(Matrix* matrix)` - освободить ресурсы, занимаемые матрицей.
+* `class Matrix` - основной класс.
 
-### Базовые функции
+### Конструкторы
 
-* `int get_rows(const Matrix* matrix, size_t* rows)` - получить количество строк.
-* `int get_cols(const Matrix* matrix, size_t* cols)` - получить количество столбцов.
-* `int get_elem(const Matrix* matrix, int row, int col, double* val)` - получить значение элемента на позиции `[<row>, <col>]`
-* `int set_elem(Matrix* matrix, int row, int col, double val)` - установить значение `val` элементу на позиции `[<row>, <col>]`
+* `Matrix::Matrix(size_t rows = 0, size_t cols = 0)` - создать пустую матрицу
+ размера `<rows>*<cols>`.
+* `Matrix::Matrix(std::istream& is)` - создание матрицы из потока. В случае
+ проблем чтения бросает исключение `InvalidMatrixStream`.
+
+### Базовые методы
+
+* `size_t Matrix::getRows() const` - получить количество строк.
+* `size_t Matrix::getCols() const` - получить количество столбцов.
+
+* `double Matrix::operator()(size_t i, size_t j) const` - получить значение
+ элемента на позиции `[<i>, <j>]`.
+* `double& Matrix::operator()(size_t i, size_t j)` - получить **элемент** на
+ позиции `[<i>, <j>]` для присваивания.
+
+В случае выхода за границы матрицы бросают исключение `OutOfRange`.
+
+Операторы сравнения:
+* `bool Matrix::operator==(const Matrix& rhs) const` 
+* `bool Matrix::operator!=(const Matrix& rhs) const`
+
+**_NB_** Для неточного сравнения `double` пригодится
+ `std::numeric_limits<double>::epsilon()`. **UPD** В тестах все значения имеют
+  точность `1e-07`.
+
+* `std::ostream& operator<<(std::ostream& os, const Matrix& matrix)` -
+ перегруженный оператор вывода матрицы в поток.
+
+**_NB_** Тут понадобится `std::setprecision()` и
+ `std::numeric_limits<double>::max_digits10`
 
 ### Базовые математические операции
 
-* `Matrix* mul_scalar(const Matrix* matrix, double val)` - скалярное умножение матрицы на действительно значение.
-* `Matrix* transp(const Matrix* matrix)` - транспонирование матрицы.
-* `Matrix* sum(const Matrix* l, const Matrix* r)` - сложение матриц.
-* `Matrix* sub(const Matrix* l, const Matrix* r)` - вычитание матриц.
-* `Matrix* mul(const Matrix* l, const Matrix* r)` - умножение матриц.
+* `Matrix Matrix::operator+(const Matrix& rhs) const` - сложение матриц.
+* `Matrix Matrix::operator-(const Matrix& rhs) const` - вычитание матриц.
+* `Matrix Matrix::operator*(const Matrix& rhs) const` - умножение матриц.
 
-Определение математических операций над матрицами можно посмотреть на [вики](https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D1%80%D0%B8%D1%86%D0%B0_(%D0%BC%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0)).
+В случае несоответствия размерностей бросают исключение `DimensionMismatch`.
 
+* `Matrix Matrix::transp() const` - транспонирование матрицы.
+
+Умножение матрицы на скаляр:
+* `Matrix Matrix::operator*(double val) const` - правостороннее.
+* `Matrix operator*(double val, const Matrix& matrix)` - левостороннее.
+ 
 ### Дополнительные математические операции
 
-* `int det(const Matrix* matrix, double* val)` - определитель матрицы ([вики](https://ru.wikipedia.org/wiki/%D0%9E%D0%BF%D1%80%D0%B5%D0%B4%D0%B5%D0%BB%D0%B8%D1%82%D0%B5%D0%BB%D1%8C)).
-* `Matrix* adj(const Matrix* matrix)` - присоединенная матрица ([вики](https://ru.wikipedia.org/wiki/%D0%A1%D0%BE%D1%8E%D0%B7%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B0%D1%82%D1%80%D0%B8%D1%86%D0%B0)).
-* `Matrix* inv(const Matrix* matrix)` - обратная матрица ([вики](https://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B0%D1%82%D1%80%D0%B8%D1%86%D0%B0)).
+* `double det() const` - определитель матрицы.
+* `Matrix adj() const` - присоединенная матрица.
+* `Matrix inv() const` - обратная матрица. Брасает `SingularMatrix`.
 
-## Общая информация
+Брасают исключения `DimensionMismatch`.
 
-* Функции интерфейса, возвращающие указатель, должны вернуть валидный указатель на `struct Matrix` в случае успеха и NULL -
-в остальных случаях.
-* Функции интерфейса, возвращающие `int`, должны вернуть `0` и, если требуется, записать результат в выходную переменную
-в случае успеха; вернуть **ненулевое** значение в остальных случаях.
+## Не забываем
+
+Запустить линтеры:
+
+```bash
+$ ./linters/run.sh
+```
+
+Запустить тесты:
+
+```bash
+$ ctest -V -R Base
+$ ctest -V -R Extra
+```

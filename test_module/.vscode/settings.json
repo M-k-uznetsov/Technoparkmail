@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "masterrecord.h": "c",
+        "blackrecord.h": "c"
+    }
+}
